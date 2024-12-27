@@ -1,4 +1,7 @@
 "use client";
+interface MatchSheetProps {
+  isAdmin: boolean;
+}
 
 import { useState, useEffect } from "react";
 import {
@@ -9,7 +12,7 @@ import {
   updateDoc,
   deleteDoc,
 } from "firebase/firestore";
-import { db } from "../config/firebase";
+import { db } from "../configs/firebase";
 
 interface MatchSheet {
   id: string;
@@ -28,7 +31,7 @@ interface MatchEvent {
   details?: string;
 }
 
-export default function MatchSheetManagement() {
+export default function MatchSheetManagement({ isAdmin }: MatchSheetProps) {
   const [matchSheets, setMatchSheets] = useState<MatchSheet[]>([]);
   const [matches, setMatches] = useState<
     { id: string; opponent: string; date: string }[]

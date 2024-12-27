@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { collection, getDocs, query, where } from "firebase/firestore";
-import { db } from "../config/firebase";
+import { db } from "../configs/firebase";
 import { Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,

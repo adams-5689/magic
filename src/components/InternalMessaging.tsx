@@ -9,7 +9,7 @@ import {
   orderBy,
   limit,
 } from "firebase/firestore";
-import { db, auth } from "../config/firebase";
+import { auth, db } from "../configs/firebase";
 
 interface Message {
   id: string;

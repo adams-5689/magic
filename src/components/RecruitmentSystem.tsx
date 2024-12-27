@@ -1,8 +1,15 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react';
-import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc } from 'firebase/firestore';
-import { db } from '../config/firebase';
+import { useState, useEffect } from "react";
+import {
+  collection,
+  addDoc,
+  getDocs,
+  doc,
+  updateDoc,
+  deleteDoc,
+} from "firebase/firestore";
+import { db } from "../configs/firebase";
 
 interface Recruit {
   id: string;
@@ -10,25 +17,27 @@ interface Recruit {
   position: string;
   age: number;
   currentClub: string;
-  status: 'scouted' | 'contacted' | 'negotiating' | 'signed' | 'rejected';
+  status: "scouted" | "contacted" | "negotiating" | "signed" | "rejected";
   notes: string;
 }
 
 export default function RecruitmentSystem() {
   const [recruits, setRecruits] = useState<Recruit[]>([]);
-  const [name, setName] = useState('');
-  const [position, setPosition] = useState('');
-  const [age, setAge] = useState('');
-  const [currentClub, setCurrentClub] = useState('');
-  const [status, setStatus] = useState<'scouted' | 'contacted' | 'negotiating' | 'signed' | 'rejected'>('scouted');
-  const [notes, setNotes] = useState('');
+  const [name, setName] = useState("");
+  const [position, setPosition] = useState("");
+  const [age, setAge] = useState<string>("");
+  const [currentClub, setCurrentClub] = useState("");
+  const [status, setStatus] = useState<
+    "scouted" | "contacted" | "negotiating" | "signed" | "rejected"
+  >("scouted");
+  const [notes, setNotes] = useState("");
 
   useEffect(() => {
     fetchRecruits();
   }, []);
 
   const fetchRecruits = async () => {
-    const querySnapshot = await getDocs(collection(db, 'recruits'));
+    const querySnapshot = await getDocs(collection(db, "recruits"));
     const fetchedRecruits: Recruit[] = [];
     querySnapshot.forEach((doc) => {
       fetchedRecruits.push({ id: doc.id, ...doc.data() } as Recruit);
@@ -38,7 +47,7 @@ export default function RecruitmentSystem() {
 
   const handleAddRecruit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await addDoc(collection(db, 'recruits'), {
+    await addDoc(collection(db, "recruits"), {
       name,
       position,
       age: parseInt(age),
@@ -46,22 +55,25 @@ export default function RecruitmentSystem() {
       status,
       notes,
     });
-    setName('');
-    setPosition('');
-    setAge('');
-    setCurrentClub('');
-    setStatus('scouted');
-    setNotes('');
+    setName("");
+    setPosition("");
+    setAge("");
+    setCurrentClub("");
+    setStatus("scouted");
+    setNotes("");
     fetchRecruits();
   };
 
-  const handleUpdateRecruit = async (id: string, updatedData: Partial<Recruit>) => {
-    await updateDoc(doc(db, 'recruits', id), updatedData);
+  const handleUpdateRecruit = async (
+    id: string,
+    updatedData: Partial<Recruit>
+  ) => {
+    await updateDoc(doc(db, "recruits", id), updatedData);
     fetchRecruits();
   };
 
   const handleDeleteRecruit = async (id: string) => {
-    await deleteDoc(doc(db, 'recruits', id));
+    await deleteDoc(doc(db, "recruits", id));
     fetchRecruits();
   };
 
@@ -103,7 +115,16 @@ export default function RecruitmentSystem() {
         />
         <select
           value={status}
-          onChange={(e) => setStatus(e.target.value as 'scouted' | 'contacted' | 'negotiating' | 'signed' | 'rejected')}
+          onChange={(e) =>
+            setStatus(
+              e.target.value as
+                | "scouted"
+                | "contacted"
+                | "negotiating"
+                | "signed"
+                | "rejected"
+            )
+          }
           className="mr-2 p-2 border rounded"
           required
         >
@@ -117,5 +138,14 @@ export default function RecruitmentSystem() {
           placeholder="Notes"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-          className="mr-2 p-
-
+          className="mr-2 p-2 border rounded"
+          required
+        />
+        <button type="submit" className="p-2 bg-blue-500 text-white rounded">
+          Ajouter
+        </button>
+      </form>
+      {/* ... rest of the component */}
+    </div>
+  );
+}

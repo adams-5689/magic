@@ -2,10 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { collection, getDocs, query, where } from "firebase/firestore";
-import { db } from "../config/firebase";
+import { db } from "../configs/firebase";
 import { Calendar as BigCalendar, momentLocalizer } from "react-big-calendar";
 import moment from "moment";
-import "react-big-calendar/lib/css/react-big-calendar.css";
 
 moment.locale("fr");
 const localizer = momentLocalizer(moment);

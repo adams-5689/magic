@@ -12,7 +12,7 @@ import {
   where,
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { db, storage } from "../config/firebase";
+import { db, storage } from "../configs/firebase";
 
 interface Player {
   id: string;

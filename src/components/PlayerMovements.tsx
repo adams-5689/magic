@@ -1,56 +1,72 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react';
-import { collection, addDoc, getDocs, query, orderBy, updateDoc, doc } from 'firebase/firestore';
-import { db } from '../config/firebase';
+import { useState, useEffect } from "react";
+import {
+  collection,
+  addDoc,
+  getDocs,
+  doc,
+  updateDoc,
+  deleteDoc,
+  query,
+  where,
+} from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { db, storage } from "../configs/firebase";
 
-interface PlayerMovement {
+interface Player {
   id: string;
-  playerId: string;
-  playerName: string;
-  fromDivision: string;
-  toDivision: string;
-  date: string;
-  status: 'pending' | 'approved' | 'rejected';
+  firstName: string;
+  lastName: string;
+  dateOfBirth: string;
+  birthCertificate: string;
+  parentBirthCertificate: string;
+  weight: number;
+  height: number;
+  previousClubs: string[];
+  photo: string;
+  additionalFiles: string[];
+  division: string;
 }
 
-export default function PlayerMovements() {
-  const [movements, setMovements] = useState<PlayerMovement[]>([]);
-  const [players, setPlayers] = useState<{ id: string; name: string }[]>([]);
-  const [divisions, setDivisions] = useState<{ id: string; name: string }[]>([]);
-  const [selectedPlayer, setSelectedPlayer] = useState('');
-  const [fromDivision, setFromDivision] = useState('');
-  const [toDivision, setToDivision] = useState('');
-  const [date, setDate] = useState('');
+interface PlayerManagementProps {
+  isAdmin: boolean;
+}
+
+export default function PlayerManagement({ isAdmin }: PlayerManagementProps) {
+  const [players, setPlayers] = useState<Player[]>([]);
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [dateOfBirth, setDateOfBirth] = useState("");
+  const [weight, setWeight] = useState("");
+  const [height, setHeight] = useState("");
+  const [previousClubs, setPreviousClubs] = useState("");
+  const [birthCertificate, setBirthCertificate] = useState<File | null>(null);
+  const [parentBirthCertificate, setParentBirthCertificate] =
+    useState<File | null>(null);
+  const [photo, setPhoto] = useState<File | null>(null);
+  const [additionalFiles, setAdditionalFiles] = useState<File[]>([]);
+  const [divisions, setDivisions] = useState<{ id: string; name: string }[]>(
+    []
+  );
+  const [selectedDivision, setSelectedDivision] = useState("");
 
   useEffect(() => {
-    fetchMovements();
     fetchPlayers();
     fetchDivisions();
   }, []);
 
-  const fetchMovements = async () => {fetchMovements = async () => {
-    const q = query(collection(db, 'playerMovements'), orderBy('date', 'desc'));
-    const querySnapshot = await getDocs(q);
-    const fetchedMovements: PlayerMovement[] = [];
-    querySnapshot.forEach((doc) => {
-      fetchedMovements.push({ id: doc.id, ...doc.data() } as PlayerMovement);
-    });
-    setMovements(fetchedMovements);
-  };
-
   const fetchPlayers = async () => {
-    const querySnapshot = await getDocs(collection(db, 'players'));
-    const fetchedPlayers: { id: string; name: string }[] = [];
+    const querySnapshot = await getDocs(collection(db, "players"));
+    const fetchedPlayers: Player[] = [];
     querySnapshot.forEach((doc) => {
-      const playerData = doc.data();
-      fetchedPlayers.push({ id: doc.id, name: playerData.name });
+      fetchedPlayers.push({ id: doc.id, ...doc.data() } as Player);
     });
     setPlayers(fetchedPlayers);
   };
 
   const fetchDivisions = async () => {
-    const querySnapshot = await getDocs(collection(db, 'divisions'));
+    const querySnapshot = await getDocs(collection(db, "divisions"));
     const fetchedDivisions: { id: string; name: string }[] = [];
     querySnapshot.forEach((doc) => {
       const divisionData = doc.data();
@@ -59,113 +75,242 @@ export default function PlayerMovements() {
     setDivisions(fetchedDivisions);
   };
 
-  const handleAddMovement = async (e: React.FormEvent) => {
+  const uploadFile = async (file: File, path: string) => {
+    const storageRef = ref(storage, path);
+    await uploadBytes(storageRef, file);
+    return await getDownloadURL(storageRef);
+  };
+
+  const handleAddPlayer = async (e: React.FormEvent) => {
     e.preventDefault();
-    const playerName = players.find(p => p.id === selectedPlayer)?.name || '';
-    await addDoc(collection(db, 'playerMovements'), {
-      playerId: selectedPlayer,
-      playerName,
-      fromDivision,
-      toDivision,
-      date,
-      status: 'pending'
+
+    const birthCertificateURL = birthCertificate
+      ? await uploadFile(
+          birthCertificate,
+          `players/${firstName}_${lastName}/birth_certificate`
+        )
+      : "";
+    const parentBirthCertificateURL = parentBirthCertificate
+      ? await uploadFile(
+          parentBirthCertificate,
+          `players/${firstName}_${lastName}/parent_birth_certificate`
+        )
+      : "";
+    const photoURL = photo
+      ? await uploadFile(photo, `players/${firstName}_${lastName}/photo`)
+      : "";
+
+    const additionalFilesURLs = await Promise.all(
+      additionalFiles.map((file, index) =>
+        uploadFile(
+          file,
+          `players/${firstName}_${lastName}/additional_file_${index}`
+        )
+      )
+    );
+
+    await addDoc(collection(db, "players"), {
+      firstName,
+      lastName,
+      dateOfBirth,
+      birthCertificate: birthCertificateURL,
+      parentBirthCertificate: parentBirthCertificateURL,
+      weight: parseFloat(weight),
+      height: parseFloat(height),
+      previousClubs: previousClubs.split(",").map((club) => club.trim()),
+      photo: photoURL,
+      additionalFiles: additionalFilesURLs,
+      division: selectedDivision,
     });
-    setSelectedPlayer('');
-    setFromDivision('');
-    setToDivision('');
-    setDate('');
-    fetchMovements();
+
+    // Reset form fields
+    setFirstName("");
+    setLastName("");
+    setDateOfBirth("");
+    setWeight("");
+    setHeight("");
+    setPreviousClubs("");
+    setBirthCertificate(null);
+    setParentBirthCertificate(null);
+    setPhoto(null);
+    setAdditionalFiles([]);
+    setSelectedDivision("");
+
+    fetchPlayers();
   };
 
-  const handleApproveMovement = async (id: string) => {
-    await updateDoc(doc(db, 'playerMovements', id), { status: 'approved' });
-    fetchMovements();
+  const handleUpdatePlayer = async (
+    id: string,
+    updatedData: Partial<Player>
+  ) => {
+    await updateDoc(doc(db, "players", id), updatedData);
+    fetchPlayers();
   };
 
-  const handleRejectMovement = async (id: string) => {
-    await updateDoc(doc(db, 'playerMovements', id), { status: 'rejected' });
-    fetchMovements();
+  const handleDeletePlayer = async (id: string) => {
+    if (isAdmin) {
+      await deleteDoc(doc(db, "players", id));
+      fetchPlayers();
+    } else {
+      alert("Seul l'administrateur peut supprimer des joueurs.");
+    }
   };
 
   return (
-    <div className="p-4">
-      <h2 className="text-2xl font-bold mb-4">Suivi des mouvements des joueurs</h2>
-      <form onSubmit={handleAddMovement} className="mb-4">
-        <select
-          value={selectedPlayer}
-          onChange={(e) => setSelectedPlayer(e.target.value)}
-          className="mr-2 p-2 border rounded"
-          required
-        >
-          <option value="">Sélectionner un joueur</option>
-          {players.map((player) => (
-            <option key={player.id} value={player.id}>{player.name}</option>
-          ))}
-        </select>
-        <select
-          value={fromDivision}
-          onChange={(e) => setFromDivision(e.target.value)}
-          className="mr-2 p-2 border rounded"
-          required
-        >
-          <option value="">Division d'origine</option>
-          {divisions.map((division) => (
-            <option key={division.id} value={division.name}>{division.name}</option>
-          ))}
-        </select>
-        <select
-          value={toDivision}
-          onChange={(e) => setToDivision(e.target.value)}
-          className="mr-2 p-2 border rounded"
-          required
-        >
-          <option value="">Nouvelle division</option>
-          {divisions.map((division) => (
-            <option key={division.id} value={division.name}>{division.name}</option>
-          ))}
-        </select>
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold mb-4">Gestion des joueurs</h2>
+      <form onSubmit={handleAddPlayer} className="space-y-4">
         <input
-          type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-          className="mr-2 p-2 border rounded"
+          type="text"
+          placeholder="Prénom"
+          value={firstName}
+          onChange={(e) => setFirstName(e.target.value)}
+          className="w-full px-3 py-2 border rounded-md"
           required
         />
-        <button type="submit" className="bg-green-500 text-white p-2 rounded">
-          Proposer un mouvement
+        <input
+          type="text"
+          placeholder="Nom"
+          value={lastName}
+          onChange={(e) => setLastName(e.target.value)}
+          className="w-full px-3 py-2 border rounded-md"
+          required
+        />
+        <input
+          type="date"
+          placeholder="Date de naissance"
+          value={dateOfBirth}
+          onChange={(e) => setDateOfBirth(e.target.value)}
+          className="w-full px-3 py-2 border rounded-md"
+          required
+        />
+        <input
+          type="number"
+          placeholder="Poids (kg)"
+          value={weight}
+          onChange={(e) => setWeight(e.target.value)}
+          className="w-full px-3 py-2 border rounded-md"
+          required
+        />
+        <input
+          type="number"
+          placeholder="Taille (cm)"
+          value={height}
+          onChange={(e) => setHeight(e.target.value)}
+          className="w-full px-3 py-2 border rounded-md"
+          required
+        />
+        <input
+          type="text"
+          placeholder="Clubs précédents (séparés par des virgules)"
+          value={previousClubs}
+          onChange={(e) => setPreviousClubs(e.target.value)}
+          className="w-full px-3 py-2 border rounded-md"
+        />
+        <div>
+          <label className="block mb-2">Extrait de naissance du joueur</label>
+          <input
+            type="file"
+            onChange={(e) =>
+              setBirthCertificate(e.target.files ? e.target.files[0] : null)
+            }
+            className="w-full"
+            required
+          />
+        </div>
+        <div>
+          <label className="block mb-2">Extrait de naissance d'un parent</label>
+          <input
+            type="file"
+            onChange={(e) =>
+              setParentBirthCertificate(
+                e.target.files ? e.target.files[0] : null
+              )
+            }
+            className="w-full"
+            required
+          />
+        </div>
+        <div>
+          <label className="block mb-2">Photo du joueur</label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) =>
+              setPhoto(e.target.files ? e.target.files[0] : null)
+            }
+            className="w-full"
+            required
+          />
+        </div>
+        <div>
+          <label className="block mb-2">Fichiers supplémentaires</label>
+          <input
+            type="file"
+            multiple
+            onChange={(e) =>
+              setAdditionalFiles(
+                e.target.files ? Array.from(e.target.files) : []
+              )
+            }
+            className="w-full"
+          />
+        </div>
+        <select
+          value={selectedDivision}
+          onChange={(e) => setSelectedDivision(e.target.value)}
+          className="w-full px-3 py-2 border rounded-md"
+          required
+        >
+          <option value="">Sélectionner une division</option>
+          {divisions.map((division) => (
+            <option key={division.id} value={division.id}>
+              {division.name}
+            </option>
+          ))}
+        </select>
+        <button
+          type="submit"
+          className="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition duration-300"
+        >
+          Ajouter un joueur
         </button>
       </form>
-      <ul>
-        {movements.map((movement) => (
-          <li key={movement.id} className="mb-2">
-            {movement.date} - {movement.playerName}: {movement.fromDivision} → {movement.toDivision}
-            {movement.status === 'pending' && (
-              <>
-                <button
-                  onClick={() => handleApproveMovement(movement.id)}
-                  className="ml-2 bg-green-500 text-white p-1 rounded"
-                >
-                  Approuver
-                </button>
-                <button
-                  onClick={() => handleRejectMovement(movement.id)}
-                  className="ml-2 bg-red-500 text-white p-1 rounded"
-                >
-                  Rejeter
-                </button>
-              </>
-            )}
-            <span className={`ml-2 ${
-              movement.status === 'approved' ? 'text-green-500' :
-              movement.status === 'rejected' ? 'text-red-500' :
-              'text-yellow-500'
-            }`}>
-              {movement.status}
-            </span>
+      <ul className="space-y-4">
+        {players.map((player) => (
+          <li key={player.id} className="bg-white p-4 rounded-md shadow">
+            <div className="flex justify-between items-center">
+              <div>
+                <h3 className="text-lg font-semibold">
+                  {player.firstName} {player.lastName}
+                </h3>
+                <p className="text-gray-600">Né le: {player.dateOfBirth}</p>
+                <p className="text-gray-600">
+                  Poids: {player.weight} kg, Taille: {player.height} cm
+                </p>
+                <p className="text-gray-600">
+                  Clubs précédents: {player.previousClubs.join(", ")}
+                </p>
+                <p className="text-gray-600">
+                  Division:{" "}
+                  {divisions.find((d) => d.id === player.division)?.name ||
+                    "Non assignée"}
+                </p>
+              </div>
+              <div className="space-x-2">
+                {isAdmin && (
+                  <button
+                    onClick={() => handleDeletePlayer(player.id)}
+                    className="bg-red-500 text-white py-1 px-2 rounded-md hover:bg-red-600 transition duration-300"
+                  >
+                    Supprimer
+                  </button>
+                )}
+              </div>
+            </div>
           </li>
         ))}
       </ul>
     </div>
   );
 }
-

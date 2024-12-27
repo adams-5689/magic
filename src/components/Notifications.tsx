@@ -9,8 +9,10 @@ import {
   orderBy,
   limit,
   onSnapshot,
+  doc,
+  updateDoc,
 } from "firebase/firestore";
-import { db } from "../config/firebase";
+import { db } from "../configs/firebase";
 
 interface Notification {
   id: string;

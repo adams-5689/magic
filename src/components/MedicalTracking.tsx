@@ -9,7 +9,8 @@ import {
   updateDoc,
   deleteDoc,
 } from "firebase/firestore";
-import { db } from "../config/firebase";
+import { db } from "../configs/firebase";
+db
 
 interface MedicalRecord {
   id: string;

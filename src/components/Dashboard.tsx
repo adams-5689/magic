@@ -1,8 +1,9 @@
 "use client";
 
+import Login from "./Login";
 import { useState, useEffect } from "react";
 import { signOut } from "firebase/auth";
-import { auth, db } from "../config/firebase";
+import { auth, db } from "../configs/firebase";
 import {
   collection,
   query,
@@ -11,33 +12,47 @@ import {
   orderBy,
   limit,
 } from "firebase/firestore";
-import PlayerManagement from "./PlayerManagement";
-import TeamManagement from "./TeamManagement";
-import BudgetTracking from "./BudgetTracking";
-import TrainingManagement from "./TrainingManagement";
-import MatchManagement from "./MatchManagement";
-import PerformanceTracking from "./PerformanceTracking";
-import ContractManagement from "./ContractManagement";
-import InternalMessaging from "./InternalMessaging";
-import Calendar from "./Calendar";
-import PerformanceCharts from "./PerformanceCharts";
-import Notifications from "./Notifications";
-import Reports from "./Reports";
-import MatchSheet from "./MatchSheet";
-import PlayerMovements from "./PlayerMovements";
-import DocumentManagement from "./DocumentManagement";
-import MatchTeamManagement from "./MatchTeamManagement";
-import MedicalTracking from "./MedicalTracking";
-import AdvancedPerformanceAnalysis from "./AdvancedPerformanceAnalysis";
-import SocialMediaIntegration from "./SocialMediaIntegration";
-import SponsorshipManagement from "./SponsorshipManagement";
-import FinancialReports from "./FinancialReports";
-import RecruitmentSystem from "./RecruitmentSystem";
-import DivisionManagement from "./DivisionManagement";
+import PlayerManagement from "../components/PlayerManagement";
+import TeamManagement from "../components/TeamManagement";
+import BudgetTracking from "../components/BudgetTracking";
+import TrainingManagement from "../components/TrainingManagement";
+import MatchManagement from "../components/MatchManagement";
+import PerformanceTracking from "../components/PerformanceTracking";
+import ContractManagement from "../components/ContractManagement";
+import InternalMessaging from "../components/InternalMessaging";
+import Calendar from "../components/Calendar";
+import PerformanceCharts from "../components/PerformanceCharts";
+import Notifications from "../components/Notifications";
+import Reports from "../components/Reports";
+import MatchSheet from "../components/MatchSheet";
+import PlayerMovements from "../components/PlayerMovements";
+import DocumentManagement from "../components/DocumentManagement";
+import MatchTeamManagement from "../components/MatchTeamManagement";
+import MedicalTracking from "../components/MedicalTracking";
+import AdvancedPerformanceAnalysis from "../components/AdvancedPerformanceAnalysis";
+import SocialMediaIntegration from "../components/SocialMediaIntegration";
+import SponsorshipManagement from "../components/SponsorshipManagement";
+import FinancialReports from "../components/FinancialReports";
+import RecruitmentSystem from "../components/RecruitmentSystem";
+import DivisionManagement from "../components/DivisionManagement";
+import AdminOverview from "../components/AdminOverview";
+import UserManagement from "../components/UserManagement";
+import SystemSettings from "../components/SystemSettings";
+
+import { Button } from "../components/ui/button";
+import { ScrollArea } from "../components/ui/scroll-area";
 
 interface DashboardProps {
   user: any;
   userRole: string;
+}
+
+interface Transaction {
+  id: string;
+  type: "income" | "expense";
+  amount: number;
+  description: string;
+  date: string;
 }
 
 export default function Dashboard({ user, userRole }: DashboardProps) {
@@ -46,7 +61,7 @@ export default function Dashboard({ user, userRole }: DashboardProps) {
   const [upcomingTrainings, setUpcomingTrainings] = useState<any[]>([]);
   const [budgetOverview, setBudgetOverview] = useState({
     total: 0,
-    recentTransactions: [],
+    recentTransactions: [] as Transaction[],
   });
 
   useEffect(() => {
@@ -71,7 +86,7 @@ export default function Dashboard({ user, userRole }: DashboardProps) {
     const querySnapshot = await getDocs(q);
     const matches: any[] = [];
     querySnapshot.forEach((doc) => {
-      matches.push({ id: doc.id, ...doc.data() });
+      matches.push({ ...doc.data(), id: doc.id });
     });
     setUpcomingMatches(matches);
   };
@@ -86,7 +101,7 @@ export default function Dashboard({ user, userRole }: DashboardProps) {
     const querySnapshot = await getDocs(q);
     const trainings: any[] = [];
     querySnapshot.forEach((doc) => {
-      trainings.push({ id: doc.id, ...doc.data() });
+      trainings.push({ ...doc.data(), id: doc.id });
     });
     setUpcomingTrainings(trainings);
   };
@@ -99,9 +114,9 @@ export default function Dashboard({ user, userRole }: DashboardProps) {
     );
     const querySnapshot = await getDocs(q);
     let total = 0;
-    const recentTransactions: any[] = [];
+    const recentTransactions: Transaction[] = [];
     querySnapshot.forEach((doc) => {
-      const data = doc.data();
+      const data = doc.data() as Transaction;
       total += data.type === "income" ? data.amount : -data.amount;
       recentTransactions.push({ id: doc.id, ...data });
     });
@@ -118,12 +133,12 @@ export default function Dashboard({ user, userRole }: DashboardProps) {
     {
       id: "teams",
       label: "Gestion des équipes",
-      component: <TeamManagement isAdmin={isAdmin} />,
+      component: <TeamManagement />,
     },
     {
       id: "training",
       label: "Gestion des entraînements",
-      component: <TrainingManagement isAdmin={isAdmin} />,
+      component: <TrainingManagement />,
     },
     {
       id: "matches",
@@ -138,7 +153,7 @@ export default function Dashboard({ user, userRole }: DashboardProps) {
     {
       id: "contracts",
       label: "Gestion des contrats",
-      component: <ContractManagement isAdmin={isAdmin} />,
+      component: <ContractManagement />,
     },
     {
       id: "messaging",
@@ -174,13 +189,9 @@ export default function Dashboard({ user, userRole }: DashboardProps) {
     {
       id: "matchTeams",
       label: "Équipes de match",
-      component: <MatchTeamManagement isAdmin={isAdmin} />,
+      component: <MatchTeamManagement />,
     },
-    {
-      id: "medical",
-      label: "Suivi médical",
-      component: <MedicalTracking isAdmin={isAdmin} />,
-    },
+    { id: "medical", label: "Suivi médical", component: <MedicalTracking /> },
     {
       id: "advancedPerformance",
       label: "Analyse avancée",
@@ -194,7 +205,7 @@ export default function Dashboard({ user, userRole }: DashboardProps) {
     {
       id: "recruitment",
       label: "Recrutement",
-      component: <RecruitmentSystem isAdmin={isAdmin} />,
+      component: <RecruitmentSystem />,
     },
     {
       id: "divisions",
@@ -203,12 +214,30 @@ export default function Dashboard({ user, userRole }: DashboardProps) {
     },
   ];
 
+  const adminMenuItems = [
+    {
+      id: "adminOverview",
+      label: "Vue d'ensemble admin",
+      component: <AdminOverview />,
+    },
+    {
+      id: "userManagement",
+      label: "Gestion des utilisateurs",
+      component: <UserManagement />,
+    },
+    {
+      id: "systemSettings",
+      label: "Paramètres du système",
+      component: <SystemSettings />,
+    },
+  ];
+
   const adminOnlyItems = [
     { id: "budget", label: "Suivi du budget", component: <BudgetTracking /> },
     {
       id: "playerMovements",
       label: "Mouvements des joueurs",
-      component: <PlayerMovements />,
+      component: <PlayerMovements isAdmin={false} />,
     },
     {
       id: "sponsorship",
@@ -222,13 +251,13 @@ export default function Dashboard({ user, userRole }: DashboardProps) {
     },
   ];
 
-  if (isAdmin) {
-    menuItems.push(...adminOnlyItems);
-  }
+  const allMenuItems = isAdmin
+    ? [...menuItems, ...adminMenuItems, ...adminOnlyItems]
+    : menuItems;
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <nav className="bg-blue-600 text-white shadow-lg">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
+      <nav className="bg-blue-600 dark:bg-blue-800 text-white shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center">
@@ -241,83 +270,83 @@ export default function Dashboard({ user, userRole }: DashboardProps) {
                 Connecté en tant que :{" "}
                 {isAdmin ? "Administrateur" : "Entraîneur"}
               </span>
-              <button
-                onClick={handleSignOut}
-                className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition duration-300"
-              >
+              <Button onClick={handleSignOut} variant="destructive">
                 Déconnexion
-              </button>
+              </Button>
             </div>
           </div>
         </div>
       </nav>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="flex flex-wrap -mx-2 overflow-hidden">
-          <div className="my-2 px-2 w-full overflow-hidden lg:w-1/4 xl:w-1/5">
-            <nav className="space-y-1" aria-label="Navigation principale">
-              {menuItems.map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => setActiveTab(item.id)}
-                  className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium ${
-                    activeTab === item.id
-                      ? "bg-gray-900 text-white"
-                      : "text-gray-300 hover:bg-gray-700 hover:text-white"
-                  } transition duration-300`}
-                  aria-pressed={activeTab === item.id}
-                >
-                  {item.label}
-                </button>
-              ))}
-            </nav>
-          </div>
-          <div className="my-2 px-2 w-full overflow-hidden lg:w-3/4 xl:w-4/5">
-            <main className="bg-white shadow-md rounded-lg p-6">
+        <div className="flex flex-col lg:flex-row gap-6">
+          <aside className="w-full lg:w-1/4 xl:w-1/5">
+            <ScrollArea className="h-[calc(100vh-6rem)]">
+              <nav className="space-y-1" aria-label="Navigation principale">
+                {allMenuItems.map((item) => (
+                  <Button
+                    key={item.id}
+                    onClick={() => setActiveTab(item.id)}
+                    variant={activeTab === item.id ? "secondary" : "ghost"}
+                    className="w-full justify-start"
+                  >
+                    {item.label}
+                  </Button>
+                ))}
+              </nav>
+            </ScrollArea>
+          </aside>
+          <main className="flex-1">
+            <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6">
               {activeTab === "overview" ? (
                 <div className="space-y-6">
-                  <h2 className="text-2xl font-bold mb-4">Aperçu</h2>
+                  <h2 className="text-2xl font-bold mb-4 dark:text-white">
+                    Aperçu
+                  </h2>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="bg-white p-4 rounded-md shadow">
-                      <h3 className="text-lg font-semibold mb-2">
+                    <div className="bg-white dark:bg-gray-700 p-4 rounded-md shadow">
+                      <h3 className="text-lg font-semibold mb-2 dark:text-white">
                         Prochains matchs
                       </h3>
                       <ul className="space-y-2">
                         {upcomingMatches.map((match) => (
-                          <li key={match.id}>
+                          <li key={match.id} className="dark:text-gray-200">
                             {new Date(match.date).toLocaleDateString()} -{" "}
                             {match.opponent}
                           </li>
                         ))}
                       </ul>
                     </div>
-                    <div className="bg-white p-4 rounded-md shadow">
-                      <h3 className="text-lg font-semibold mb-2">
+                    <div className="bg-white dark:bg-gray-700 p-4 rounded-md shadow">
+                      <h3 className="text-lg font-semibold mb-2 dark:text-white">
                         Prochains entraînements
                       </h3>
                       <ul className="space-y-2">
                         {upcomingTrainings.map((training) => (
-                          <li key={training.id}>
+                          <li key={training.id} className="dark:text-gray-200">
                             {new Date(training.date).toLocaleDateString()} -{" "}
                             {training.type}
                           </li>
                         ))}
                       </ul>
                     </div>
-                    <div className="bg-white p-4 rounded-md shadow">
-                      <h3 className="text-lg font-semibold mb-2">
+                    <div className="bg-white dark:bg-gray-700 p-4 rounded-md shadow">
+                      <h3 className="text-lg font-semibold mb-2 dark:text-white">
                         Aperçu du budget
                       </h3>
-                      <p className="font-bold">
+                      <p className="font-bold dark:text-gray-200">
                         Total: {budgetOverview.total.toFixed(2)} €
                       </p>
-                      <h4 className="text-md font-semibold mt-2 mb-1">
+                      <h4 className="text-md font-semibold mt-2 mb-1 dark:text-gray-300">
                         Transactions récentes:
                       </h4>
                       <ul className="space-y-2">
                         {budgetOverview.recentTransactions.map(
                           (transaction) => (
-                            <li key={transaction.id}>
+                            <li
+                              key={transaction.id}
+                              className="dark:text-gray-200"
+                            >
                               {transaction.type === "income" ? "+" : "-"}{" "}
                               {transaction.amount.toFixed(2)} € -{" "}
                               {transaction.description}
@@ -329,10 +358,10 @@ export default function Dashboard({ user, userRole }: DashboardProps) {
                   </div>
                 </div>
               ) : (
-                menuItems.find((item) => item.id === activeTab)?.component
+                allMenuItems.find((item) => item.id === activeTab)?.component
               )}
-            </main>
-          </div>
+            </div>
+          </main>
         </div>
       </div>
     </div>

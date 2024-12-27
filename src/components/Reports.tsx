@@ -1,10 +1,13 @@
 "use client";
+interface ReportsProps {
+  isAdmin: boolean;
+}
 
 import { useState } from "react";
 import { collection, query, where, getDocs } from "firebase/firestore";
-import { db } from "../config/firebase";
+import { db } from "../configs/firebase";
 
-export default function Reports() {
+export default function Reports({ isAdmin }: ReportsProps) {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [report, setReport] = useState<string | null>(null);

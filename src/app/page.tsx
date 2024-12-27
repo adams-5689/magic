@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { onAuthStateChanged } from "firebase/auth";
-import { auth } from "../config/firebase";
+import { auth } from "../configs/firebase";
 import Login from "../components/Login";
 import Dashboard from "../components/Dashboard";
 

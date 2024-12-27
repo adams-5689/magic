@@ -1,5 +1,9 @@
 "use client";
 
+interface DocumentManagementProps {
+  isAdmin: boolean;
+}
+
 import { useState, useEffect } from "react";
 import {
   collection,
@@ -14,7 +18,7 @@ import {
   getDownloadURL,
   deleteObject,
 } from "firebase/storage";
-import { db, storage } from "../config/firebase";
+import { db, storage } from "../configs/firebase";
 
 interface Document {
   id: string;
@@ -25,7 +29,9 @@ interface Document {
   uploadDate: string;
 }
 
-export default function DocumentManagement() {
+export default function DocumentManagement({
+  isAdmin,
+}: DocumentManagementProps) {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [players, setPlayers] = useState<{ id: string; name: string }[]>([]);
   const [selectedPlayer, setSelectedPlayer] = useState("");

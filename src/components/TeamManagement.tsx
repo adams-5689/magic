@@ -1,8 +1,15 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react';
-import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc } from 'firebase/firestore';
-import { db } from '../config/firebase';
+import { useState, useEffect } from "react";
+import {
+  collection,
+  addDoc,
+  getDocs,
+  doc,
+  updateDoc,
+  deleteDoc,
+} from "firebase/firestore";
+import { db } from "../configs/firebase";
 
 interface Team {
   id: string;
@@ -12,15 +19,15 @@ interface Team {
 
 export default function TeamManagement() {
   const [teams, setTeams] = useState<Team[]>([]);
-  const [name, setName] = useState('');
-  const [coach, setCoach] = useState('');
+  const [name, setName] = useState("");
+  const [coach, setCoach] = useState("");
 
   useEffect(() => {
     fetchTeams();
   }, []);
 
   const fetchTeams = async () => {
-    const querySnapshot = await getDocs(collection(db, 'teams'));
+    const querySnapshot = await getDocs(collection(db, "teams"));
     const fetchedTeams: Team[] = [];
     querySnapshot.forEach((doc) => {
       fetchedTeams.push({ id: doc.id, ...doc.data() } as Team);
@@ -30,22 +37,22 @@ export default function TeamManagement() {
 
   const handleAddTeam = async (e: React.FormEvent) => {
     e.preventDefault();
-    await addDoc(collection(db, 'teams'), {
+    await addDoc(collection(db, "teams"), {
       name,
       coach,
     });
-    setName('');
-    setCoach('');
+    setName("");
+    setCoach("");
     fetchTeams();
   };
 
   const handleUpdateTeam = async (id: string, updatedData: Partial<Team>) => {
-    await updateDoc(doc(db, 'teams', id), updatedData);
+    await updateDoc(doc(db, "teams", id), updatedData);
     fetchTeams();
   };
 
   const handleDeleteTeam = async (id: string) => {
-    await deleteDoc(doc(db, 'teams', id));
+    await deleteDoc(doc(db, "teams", id));
     fetchTeams();
   };
 
@@ -78,7 +85,11 @@ export default function TeamManagement() {
           <li key={team.id} className="mb-2">
             {team.name} - Entraîneur: {team.coach}
             <button
-              onClick={() => handleUpdateTeam(team.id, { coach: prompt('Nouvel entraîneur:') || team.coach })}
+              onClick={() =>
+                handleUpdateTeam(team.id, {
+                  coach: prompt("Nouvel entraîneur:") || team.coach,
+                })
+              }
               className="ml-2 bg-yellow-500 text-white p-1 rounded"
             >
               Modifier l'entraîneur
@@ -92,7 +103,6 @@ export default function TeamManagement() {
           </li>
         ))}
       </ul>
-    </div>>
+    </div>
   );
 }
-

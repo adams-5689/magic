@@ -9,7 +9,7 @@ import {
   where,
   orderBy,
 } from "firebase/firestore";
-import { db } from "../config/firebase";
+import { db } from "../configs/firebase";
 
 interface BudgetItem {
   id: string;
